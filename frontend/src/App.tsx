@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { PortfolioProvider } from './store/portfolio';
 import { ThemeProvider } from './store/theme';
 import { ToastProvider } from './components/ui/Toast';
@@ -9,10 +9,8 @@ import Trading from './routes/Trading';
 import Reporting from './routes/Reporting';
 
 export default function App() {
-  const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
-
   return (
-    <BrowserRouter basename={basePath}>
+    <HashRouter>
       <ThemeProvider>
         <PortfolioProvider>
           <ToastProvider>
@@ -27,6 +25,6 @@ export default function App() {
           </ToastProvider>
         </PortfolioProvider>
       </ThemeProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
