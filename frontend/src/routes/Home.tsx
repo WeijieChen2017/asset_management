@@ -345,7 +345,7 @@ export default function Home() {
               }}
             >
               <div className="platform-flow-canvas">
-                <svg viewBox={`0 0 ${FLOW_LAYOUT.width} ${FLOW_LAYOUT.height}`} className="w-full h-auto">
+                <svg viewBox={`0 0 ${FLOW_LAYOUT.width} ${FLOW_LAYOUT.height}`}>
                 <defs>
                   <filter id="stageSoftShadow" x="-20%" y="-20%" width="140%" height="140%">
                     <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor={flowPalette.dropShadow} floodOpacity={isDark ? '0.35' : '0.12'} />

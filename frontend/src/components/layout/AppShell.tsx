@@ -1,13 +1,19 @@
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 
 export function AppShell() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      {sidebarOpen && <Sidebar />}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar />
+        <TopBar
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen((open) => !open)}
+        />
         <main className="flex-1 overflow-y-auto">
           <div
             className="app-shell-container"

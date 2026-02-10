@@ -29,13 +29,13 @@
   :root { --ui-scale: 1.05; }
 }
 @media (min-width: 1920px) {
-  :root { --ui-scale: 1.12; }
+  :root { --ui-scale: 1.15; }
 }
 @media (min-width: 2560px) {
-  :root { --ui-scale: 1.22; }
+  :root { --ui-scale: 1.50; }
 }
 @media (min-width: 3200px) {
-  :root { --ui-scale: 1.30; }
+  :root { --ui-scale: 1.90; }
 }
 
 * {
@@ -81,8 +81,15 @@ h3 {
 
 .platform-flow-canvas {
   width: min(calc(1100px * var(--ui-scale)), 100%);
-  height: auto;
+  aspect-ratio: 1100 / 520;
+  max-height: calc(520px * var(--ui-scale));
   margin-inline: auto;
+}
+
+.platform-flow-canvas > svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* Scrollbar styling */

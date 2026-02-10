@@ -2,9 +2,14 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { usePortfolio } from '../../store/portfolio';
 import { useTheme } from '../../store/theme';
-import { RefreshCw, Sun, Moon } from 'lucide-react';
+import { RefreshCw, Sun, Moon, Menu, X } from 'lucide-react';
 
-export function TopBar() {
+interface TopBarProps {
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
+}
+
+export function TopBar({ sidebarOpen, onToggleSidebar }: TopBarProps) {
   const { state } = usePortfolio();
   const { portfolio, demoMode, lastUpdated } = state;
   const { theme, toggle } = useTheme();
@@ -13,6 +18,10 @@ export function TopBar() {
     <header className="h-14 shrink-0 bg-surface-2 border-b border-border-custom">
       <div className="app-shell-container h-full flex items-center justify-between">
         <div className="flex items-center gap-4">
+          <Button variant="secondary" size="sm" onClick={onToggleSidebar}>
+            {sidebarOpen ? <X size={14} /> : <Menu size={14} />}
+            {sidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
+          </Button>
           <h1 className="text-sm font-bold text-text-primary">{portfolio.name}</h1>
           <span className="text-xs text-text-secondary font-medium">Benchmark: {portfolio.benchmark}</span>
           {demoMode && <Badge variant="warning">DEMO</Badge>}
