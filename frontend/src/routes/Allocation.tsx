@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { usePortfolio } from '../store/portfolio';
 import { marketData } from '../data/demoState';
+import { mlModelMap, type MLModelId } from '../data/mlModels';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { WeightsBarChart } from '../components/charts/WeightsBarChart';
 import { DataTable } from '../components/tables/DataTable';
 import { useToast } from '../components/ui/Toast';
+import { MLModelDrawer } from '../components/MLModelDrawer';
 import { Check, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 
@@ -36,6 +38,13 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const SCHEME_ICONS = [TrendingUp, TrendingUp, Minus, TrendingDown, TrendingDown];
+
+const ALLOCATION_MODELS: MLModelId[] = ['ML_12', 'ML_13'];
+
+function fmtPercent(value: number) {
+  const normalized = value <= 1 ? value * 100 : value;
+  return `${normalized.toFixed(2)}%`;
+}
 
 const tickerColumns: ColumnDef<TickerRow, unknown>[] = [
   {
@@ -97,11 +106,23 @@ export default function Allocation() {
   const { allocation } = state;
 
   const [selectedScheme, setSelectedScheme] = useState(allocation.activeScheme);
+  const [activeModelId, setActiveModelId] = useState<MLModelId | null>(null);
   const scheme = marketData.schemes.find((s) => s.id === selectedScheme) ?? marketData.schemes[0];
+  const activeModel = activeModelId ? mlModelMap[activeModelId] : null;
+  const suggestedAllocationInputs = state.reporting.suggestedAllocationInputs;
 
   const handleApply = () => {
     dispatch({ type: 'SET_SCHEME', payload: { schemeId: selectedScheme } });
     toast(`Applied "${scheme.name}" scheme`, 'success');
+  };
+
+  const runModel = (modelId: MLModelId) => setActiveModelId(modelId);
+
+  const handleRunMock = (modelId: MLModelId) => {
+    const model = mlModelMap[modelId];
+    dispatch({ type: 'RUN_ML_MODEL', payload: { modelId, output: model.mockOutput } });
+    toast(`${modelId} completed (confidence: ${model.confidence.toFixed(2)})`, 'success');
+    setActiveModelId(null);
   };
 
   // Build ticker rows for selected scheme
@@ -139,11 +160,59 @@ export default function Allocation() {
             Select a market regime to set portfolio allocation targets
           </p>
         </div>
-        <Button onClick={handleApply} disabled={selectedScheme === allocation.activeScheme}>
-          <Check size={14} />
-          Apply Scheme
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleApply} disabled={selectedScheme === allocation.activeScheme}>
+            <Check size={14} />
+            Apply Scheme
+          </Button>
+          {ALLOCATION_MODELS.map((modelId) => {
+            const model = mlModelMap[modelId];
+            return (
+              <Button key={modelId} variant="secondary" onClick={() => runModel(modelId)}>
+                Run {modelId} ({model.location})
+              </Button>
+            );
+          })}
+        </div>
       </div>
+
+      {suggestedAllocationInputs && (
+        <Card title="Suggested Settings (ML_31)">
+          <div className="space-y-3">
+            <p className="text-sm text-text-secondary">
+              Suggested risk target: <span className="font-semibold text-text-primary">{fmtPercent(suggestedAllocationInputs.riskTarget)}</span>
+            </p>
+            <p className="text-sm text-text-secondary">
+              Max sector weight: <span className="font-semibold text-text-primary">{fmtPercent(suggestedAllocationInputs.constraints.maxSectorWeight)}</span> |
+              Turnover limit: <span className="font-semibold text-text-primary"> {fmtPercent(suggestedAllocationInputs.constraints.turnoverLimit)}</span>
+            </p>
+            <div className="space-y-1">
+              {suggestedAllocationInputs.reasons.map((reason) => (
+                <p key={reason.message} className="text-xs text-text-muted">[{reason.severity}] {reason.message}</p>
+              ))}
+            </div>
+            <Button
+              size="sm"
+              onClick={() => {
+                dispatch({ type: 'APPLY_SUGGESTED_ALLOCATION' });
+                toast('Applied suggested allocation settings', 'success');
+              }}
+            >
+              Apply Suggested Settings
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      <Card title="ML Actions">
+        <div className="flex flex-wrap gap-2">
+          {ALLOCATION_MODELS.map((modelId) => (
+            <Button key={`card-${modelId}`} variant="secondary" onClick={() => runModel(modelId)}>
+              Run {modelId} ({mlModelMap[modelId].location}) - {mlModelMap[modelId].name}
+            </Button>
+          ))}
+        </div>
+      </Card>
 
       {/* Scheme Selector Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -223,6 +292,14 @@ export default function Allocation() {
           Last allocation run: {new Date(allocation.lastRunAt).toLocaleString()}
         </p>
       )}
+
+      <MLModelDrawer
+        open={activeModelId !== null}
+        model={activeModel}
+        inputPayload={activeModel ? activeModel.buildInput(state) : null}
+        onClose={() => setActiveModelId(null)}
+        onRunMock={(model) => handleRunMock(model.id)}
+      />
     </div>
   );
 }

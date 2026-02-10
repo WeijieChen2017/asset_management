@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { usePortfolio } from '../store/portfolio';
+import { mlModelMap, type MLModelId } from '../data/mlModels';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -7,10 +8,13 @@ import { Drawer } from '../components/ui/Drawer';
 import { DataTable } from '../components/tables/DataTable';
 import { EmptyState } from '../components/ui/EmptyState';
 import { useToast } from '../components/ui/Toast';
+import { MLModelDrawer } from '../components/MLModelDrawer';
 import { Select } from '../components/ui/Select';
 import { ArrowDownUp, Plus } from 'lucide-react';
 import { OrderSide, OrderStatus, OrderType, type Position, type Order, type RecommendedTrade } from '../types/portfolio';
 import type { ColumnDef } from '@tanstack/react-table';
+
+const TRADING_MODELS: MLModelId[] = ['ML_23'];
 
 function fmt$(v: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
@@ -75,11 +79,13 @@ export default function Trading() {
   const { trading } = state;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeModelId, setActiveModelId] = useState<MLModelId | null>(null);
   const [orderSymbol, setOrderSymbol] = useState('');
   const [orderSide, setOrderSide] = useState<OrderSide>(OrderSide.Buy);
   const [orderQty, setOrderQty] = useState(100);
   const [orderType, setOrderType] = useState<OrderType>(OrderType.Market);
   const [limitPrice, setLimitPrice] = useState(0);
+  const activeModel = activeModelId ? mlModelMap[activeModelId] : null;
 
   const handleRebalance = () => {
     dispatch({ type: 'REBALANCE' });
@@ -111,6 +117,13 @@ export default function Trading() {
     setDrawerOpen(true);
   };
 
+  const handleRunMock = (modelId: MLModelId) => {
+    const model = mlModelMap[modelId];
+    dispatch({ type: 'RUN_ML_MODEL', payload: { modelId, output: model.mockOutput } });
+    toast(`${modelId} completed (confidence: ${model.confidence.toFixed(2)})`, 'success');
+    setActiveModelId(null);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -125,12 +138,53 @@ export default function Trading() {
             <ArrowDownUp size={14} />
             Rebalance to Targets
           </Button>
+          {TRADING_MODELS.map((modelId) => (
+            <Button key={modelId} variant="secondary" onClick={() => setActiveModelId(modelId)}>
+              Run {modelId} ({mlModelMap[modelId].location})
+            </Button>
+          ))}
           <Button onClick={() => setDrawerOpen(true)}>
             <Plus size={14} />
             New Order
           </Button>
         </div>
       </div>
+
+      {trading.controlsSuggested && (
+        <Card title="Suggested Controls (ML_32)">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-sm text-text-secondary">
+                Max participation: <span className="font-semibold text-text-primary">{(trading.controlsSuggested.maxParticipationRate * 100).toFixed(1)}%</span>
+              </p>
+              <p className="text-sm text-text-secondary">
+                Max order notional: <span className="font-semibold text-text-primary">{fmt$(trading.controlsSuggested.maxOrderNotional)}</span>
+              </p>
+              <p className="text-sm text-text-secondary">
+                Prefer limit orders: <span className="font-semibold text-text-primary">{trading.controlsSuggested.preferLimitOrders ? 'Yes' : 'No'}</span>
+              </p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => {
+                dispatch({
+                  type: 'PATCH_STATE',
+                  payload: { trading: { ...state.trading, controlsSuggested: null } },
+                });
+                toast('Applied suggested trading controls', 'success');
+              }}
+            >
+              Apply Controls
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      <Card title="ML Actions">
+        <Button variant="secondary" onClick={() => setActiveModelId('ML_23')}>
+          Run ML_23 (Trading → Reporting) - Evaluate Execution
+        </Button>
+      </Card>
 
       {/* Positions */}
       <Card title="Positions">
@@ -164,6 +218,25 @@ export default function Trading() {
           </div>
         )}
       </Card>
+
+      {trading.orderPlan && trading.orderPlan.length > 0 && (
+        <Card title="Order Plan (ML_12)">
+          <div className="space-y-3">
+            {trading.orderPlan.map((plan) => (
+              <div key={`${plan.symbol}-${plan.parentQty}`} className="border border-border-custom rounded-lg p-3 bg-surface-3/60">
+                <p className="text-sm text-text-primary font-semibold">{plan.symbol} parent qty: {plan.parentQty.toLocaleString()}</p>
+                <div className="mt-2 space-y-1">
+                  {plan.slices.map((slice, idx) => (
+                    <p key={`${plan.symbol}-${idx}`} className="text-xs text-text-secondary">
+                      Slice {idx + 1}: {slice.qty.toLocaleString()} {slice.type}{slice.limitOffsetBps !== undefined ? ` (offset ${slice.limitOffsetBps} bps)` : ''}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Orders Blotter */}
       <Card title="Orders Blotter">
@@ -237,6 +310,14 @@ export default function Trading() {
           </Button>
         </div>
       </Drawer>
+
+      <MLModelDrawer
+        open={activeModelId !== null}
+        model={activeModel}
+        inputPayload={activeModel ? activeModel.buildInput(state) : null}
+        onClose={() => setActiveModelId(null)}
+        onRunMock={(model) => handleRunMock(model.id)}
+      />
     </div>
   );
 }

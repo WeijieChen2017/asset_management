@@ -1,15 +1,22 @@
+import { useState } from 'react';
 import { usePortfolio } from '../store/portfolio';
+import { mlModelMap, type MLModelId } from '../data/mlModels';
 import { Card } from '../components/ui/Card';
 import { KpiCard } from '../components/ui/KpiCard';
 import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
 import { PerformanceChart } from '../components/charts/PerformanceChart';
 import { DrawdownChart } from '../components/charts/DrawdownChart';
 import { WeightsBarChart } from '../components/charts/WeightsBarChart';
 import { ExposureChart } from '../components/charts/ExposureChart';
 import { DataTable } from '../components/tables/DataTable';
+import { useToast } from '../components/ui/Toast';
+import { MLModelDrawer } from '../components/MLModelDrawer';
 import { AlertTriangle, Info, ShieldAlert } from 'lucide-react';
 import type { Attribution } from '../types/portfolio';
 import type { ColumnDef } from '@tanstack/react-table';
+
+const REPORTING_MODELS: MLModelId[] = ['ML_31', 'ML_32'];
 
 const attrCols: ColumnDef<Attribution, unknown>[] = [
   { accessorKey: 'group', header: 'Sector', cell: ({ getValue }) => <span className="text-text-secondary">{getValue() as string}</span> },
@@ -29,20 +36,50 @@ const attrCols: ColumnDef<Attribution, unknown>[] = [
 ];
 
 export default function Reporting() {
-  const { state } = usePortfolio();
+  const { state, dispatch } = usePortfolio();
+  const { toast } = useToast();
   const { reporting } = state;
   const { kpis } = reporting;
+  const [activeModelId, setActiveModelId] = useState<MLModelId | null>(null);
+  const activeModel = activeModelId ? mlModelMap[activeModelId] : null;
 
   const sectorData = reporting.sectorExposures.map((s) => ({ name: s.name, weight: s.weight }));
 
+  const handleRunMock = (modelId: MLModelId) => {
+    const model = mlModelMap[modelId];
+    dispatch({ type: 'RUN_ML_MODEL', payload: { modelId, output: model.mockOutput } });
+    toast(`${modelId} completed (confidence: ${model.confidence.toFixed(2)})`, 'success');
+    setActiveModelId(null);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-text-primary">Reporting & Analysis</h2>
-        <p className="text-sm text-text-secondary mt-1">
-          Performance metrics, attribution, and risk exposure analysis
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-text-primary">Reporting & Analysis</h2>
+          <p className="text-sm text-text-secondary mt-1">
+            Performance metrics, attribution, and risk exposure analysis
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {REPORTING_MODELS.map((modelId) => (
+            <Button key={modelId} variant="secondary" onClick={() => setActiveModelId(modelId)}>
+              Run {modelId} ({mlModelMap[modelId].location})
+            </Button>
+          ))}
+        </div>
       </div>
+
+      <Card title="ML Actions">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => setActiveModelId('ML_31')}>
+            Run ML_31 (Reporting → Allocation) - Suggest Allocation Settings
+          </Button>
+          <Button variant="secondary" onClick={() => setActiveModelId('ML_32')}>
+            Run ML_32 (Reporting → Trading) - Suggest Trading Controls
+          </Button>
+        </div>
+      </Card>
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -51,6 +88,67 @@ export default function Reporting() {
         <KpiCard label="Sharpe Ratio" value={kpis.sharpe.toFixed(2)} />
         <KpiCard label="Max Drawdown" value={`${kpis.maxDrawdown.toFixed(1)}%`} />
       </div>
+
+      {reporting.expectedSummary && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <KpiCard label="Expected Return" value={`${(reporting.expectedSummary.expectedReturn * 100).toFixed(2)}%`} />
+          <KpiCard label="Expected Vol" value={`${(reporting.expectedSummary.expectedVol * 100).toFixed(2)}%`} />
+          <KpiCard label="Expected Tracking Error" value={`${(reporting.expectedSummary.expectedTrackingError * 100).toFixed(2)}%`} />
+        </div>
+      )}
+
+      {reporting.execution && (
+        <Card title="Execution Metrics (ML_23)">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-lg border border-border-custom p-4 bg-surface-3/60">
+              <p className="text-xs text-text-muted">Implementation Shortfall</p>
+              <p className="text-lg font-semibold text-text-primary">{reporting.execution.executionMetrics.implementationShortfallBps.toFixed(1)} bps</p>
+            </div>
+            <div className="rounded-lg border border-border-custom p-4 bg-surface-3/60">
+              <p className="text-xs text-text-muted">Slippage</p>
+              <p className="text-lg font-semibold text-text-primary">{reporting.execution.executionMetrics.slippageBps.toFixed(1)} bps</p>
+            </div>
+            <div className="rounded-lg border border-border-custom p-4 bg-surface-3/60">
+              <p className="text-xs text-text-muted">Spread Cost</p>
+              <p className="text-lg font-semibold text-text-primary">{reporting.execution.executionMetrics.spreadCostBps.toFixed(1)} bps</p>
+            </div>
+          </div>
+          {reporting.execution.orderScores.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {reporting.execution.orderScores.map((score) => (
+                <div key={score.orderId} className="text-sm text-text-secondary">
+                  <span className="font-mono text-xs text-text-primary">{score.orderId}</span>: quality {(score.qualityScore * 100).toFixed(0)}% ({score.notes.join(', ')})
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {reporting.allocationExplainability && (
+        <Card title="Allocation Explainability (ML_13)">
+          <div className="space-y-3">
+            {reporting.allocationExplainability.explanations.map((explanation, idx) => (
+              <div key={`${explanation.type}-${idx}`} className="rounded-lg border border-border-custom p-3 bg-surface-3/60">
+                <p className="text-sm text-text-primary font-semibold">{explanation.type}</p>
+                <p className="text-sm text-text-secondary mt-1">{explanation.message}</p>
+              </div>
+            ))}
+            {reporting.allocationExplainability.targetVsBenchmark.length > 0 && (
+              <div className="pt-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-2">Target vs Benchmark</p>
+                <div className="space-y-1">
+                  {reporting.allocationExplainability.targetVsBenchmark.map((item) => (
+                    <p key={item.symbol} className="text-xs text-text-secondary">
+                      {item.symbol}: target {(item.targetWeight * 100).toFixed(2)}%, benchmark {(item.benchmarkWeight * 100).toFixed(2)}%, active {(item.activeWeight * 100).toFixed(2)}%
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Performance Chart */}
       <Card title="Portfolio vs Benchmark">
@@ -106,6 +204,14 @@ export default function Reporting() {
           </div>
         </Card>
       )}
+
+      <MLModelDrawer
+        open={activeModelId !== null}
+        model={activeModel}
+        inputPayload={activeModel ? activeModel.buildInput(state) : null}
+        onClose={() => setActiveModelId(null)}
+        onRunMock={(model) => handleRunMock(model.id)}
+      />
     </div>
   );
 }

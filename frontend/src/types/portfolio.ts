@@ -93,12 +93,42 @@ export interface RecommendedTrade {
   side: OrderSide;
   quantity: number;
   reason: string;
+  expectedSlippageBps?: number;
+  fillProbability?: number;
+}
+
+export interface OrderPlanSlice {
+  qty: number;
+  type: string;
+  limitOffsetBps?: number;
+}
+
+export interface OrderPlanItem {
+  symbol: string;
+  parentQty: number;
+  slices: OrderPlanSlice[];
+}
+
+export interface Fill {
+  orderId: string;
+  fillQty: number;
+  fillPrice: number;
+  fillTime: string;
+}
+
+export interface SuggestedControls {
+  maxParticipationRate: number;
+  maxOrderNotional: number;
+  preferLimitOrders: boolean;
 }
 
 export interface Trading {
   positions: Position[];
   orders: Order[];
   recommendedTrades: RecommendedTrade[];
+  orderPlan: OrderPlanItem[] | null;
+  fills: Fill[];
+  controlsSuggested: SuggestedControls | null;
   lastRebalanceAt: string | null;
 }
 
@@ -145,6 +175,52 @@ export interface KPIs {
   informationRatio: number;
 }
 
+export interface ExecutionReport {
+  executionMetrics: {
+    implementationShortfallBps: number;
+    slippageBps: number;
+    spreadCostBps: number;
+  };
+  orderScores: {
+    orderId: string;
+    qualityScore: number;
+    notes: string[];
+  }[];
+  anomalies: string[];
+}
+
+export interface AllocationExplainability {
+  explanations: {
+    type: string;
+    message: string;
+    evidence: Record<string, unknown>;
+  }[];
+  targetVsBenchmark: {
+    symbol: string;
+    targetWeight: number;
+    benchmarkWeight: number;
+    activeWeight: number;
+  }[];
+}
+
+export interface ExpectedSummary {
+  expectedReturn: number;
+  expectedVol: number;
+  expectedTrackingError: number;
+}
+
+export interface SuggestedAllocationInputs {
+  riskTarget: number;
+  constraints: {
+    maxSectorWeight: number;
+    turnoverLimit: number;
+  };
+  reasons: {
+    message: string;
+    severity: string;
+  }[];
+}
+
 export interface Reporting {
   kpis: KPIs;
   performanceSeries: PerformancePoint[];
@@ -153,6 +229,10 @@ export interface Reporting {
   sectorExposures: Exposure[];
   factorExposures: FactorExposure[];
   feedbackSignals: FeedbackSignal[];
+  execution: ExecutionReport | null;
+  allocationExplainability: AllocationExplainability | null;
+  expectedSummary: ExpectedSummary | null;
+  suggestedAllocationInputs: SuggestedAllocationInputs | null;
 }
 
 export interface Portfolio {

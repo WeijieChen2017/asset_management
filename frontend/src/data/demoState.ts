@@ -125,6 +125,12 @@ export const demoState: PortfolioState = {
       { orderId: 'ORD-003', symbol: 'META', side: OrderSide.Buy, quantity: 300, type: OrderType.Limit, limitPrice: 400.00, status: OrderStatus.PartiallyFilled, filledQty: 150, createdAt: '2026-02-09T10:00:00Z' },
     ],
     recommendedTrades: [],
+    orderPlan: null,
+    fills: [
+      { orderId: 'ORD-002', fillQty: 500, fillPrice: 511.40, fillTime: '2026-02-09T09:30:05Z' },
+      { orderId: 'ORD-003', fillQty: 150, fillPrice: 399.80, fillTime: '2026-02-09T10:04:00Z' },
+    ],
+    controlsSuggested: null,
     lastRebalanceAt: null,
   },
   reporting: {
@@ -170,6 +176,10 @@ export const demoState: PortfolioState = {
       { type: 'warning', message: 'Technology sector exposure (31.2%) exceeds target max (25%). Consider rebalancing.', suggestedRiskTarget: 11.0, flags: ['SECTOR_OVERWEIGHT'] },
       { type: 'info', message: 'Portfolio Sharpe ratio (0.92) is near optimal frontier peak. Current allocation is efficient.', flags: ['EFFICIENT'] },
     ],
+    execution: null,
+    allocationExplainability: null,
+    expectedSummary: null,
+    suggestedAllocationInputs: null,
   },
   lastUpdated: '2026-02-09T10:35:00Z',
   demoMode: true,
