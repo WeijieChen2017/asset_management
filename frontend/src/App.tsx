@@ -9,8 +9,10 @@ import Trading from './routes/Trading';
 import Reporting from './routes/Reporting';
 
 export default function App() {
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basePath}>
       <ThemeProvider>
         <PortfolioProvider>
           <ToastProvider>

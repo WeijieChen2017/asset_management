@@ -120,7 +120,7 @@ export default function Trading() {
   const handleRunMock = (modelId: MLModelId) => {
     const model = mlModelMap[modelId];
     dispatch({ type: 'RUN_ML_MODEL', payload: { modelId, output: model.mockOutput } });
-    toast(`${modelId} completed (confidence: ${model.confidence.toFixed(2)})`, 'success');
+    toast(`${model.name} completed (confidence: ${model.confidence.toFixed(2)})`, 'success');
     setActiveModelId(null);
   };
 
@@ -140,7 +140,7 @@ export default function Trading() {
           </Button>
           {TRADING_MODELS.map((modelId) => (
             <Button key={modelId} variant="secondary" onClick={() => setActiveModelId(modelId)}>
-              Run {modelId} ({mlModelMap[modelId].location})
+              Run {mlModelMap[modelId].name}
             </Button>
           ))}
           <Button onClick={() => setDrawerOpen(true)}>
@@ -151,7 +151,7 @@ export default function Trading() {
       </div>
 
       {trading.controlsSuggested && (
-        <Card title="Suggested Controls (ML_32)">
+        <Card title="Suggested Controls (Trading Controller)">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-1">
               <p className="text-sm text-text-secondary">
@@ -182,7 +182,7 @@ export default function Trading() {
 
       <Card title="ML Actions">
         <Button variant="secondary" onClick={() => setActiveModelId('ML_23')}>
-          Run ML_23 (Trading → Reporting) - Evaluate Execution
+          Run {mlModelMap.ML_23.name}
         </Button>
       </Card>
 
@@ -220,7 +220,7 @@ export default function Trading() {
       </Card>
 
       {trading.orderPlan && trading.orderPlan.length > 0 && (
-        <Card title="Order Plan (ML_12)">
+        <Card title="Order Plan (Trade Planner)">
           <div className="space-y-3">
             {trading.orderPlan.map((plan) => (
               <div key={`${plan.symbol}-${plan.parentQty}`} className="border border-border-custom rounded-lg p-3 bg-surface-3/60">

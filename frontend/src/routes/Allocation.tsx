@@ -121,7 +121,7 @@ export default function Allocation() {
   const handleRunMock = (modelId: MLModelId) => {
     const model = mlModelMap[modelId];
     dispatch({ type: 'RUN_ML_MODEL', payload: { modelId, output: model.mockOutput } });
-    toast(`${modelId} completed (confidence: ${model.confidence.toFixed(2)})`, 'success');
+    toast(`${model.name} completed (confidence: ${model.confidence.toFixed(2)})`, 'success');
     setActiveModelId(null);
   };
 
@@ -169,7 +169,7 @@ export default function Allocation() {
             const model = mlModelMap[modelId];
             return (
               <Button key={modelId} variant="secondary" onClick={() => runModel(modelId)}>
-                Run {modelId} ({model.location})
+                Run {model.name}
               </Button>
             );
           })}
@@ -177,7 +177,7 @@ export default function Allocation() {
       </div>
 
       {suggestedAllocationInputs && (
-        <Card title="Suggested Settings (ML_31)">
+        <Card title="Suggested Settings (Allocation Advisor)">
           <div className="space-y-3">
             <p className="text-sm text-text-secondary">
               Suggested risk target: <span className="font-semibold text-text-primary">{fmtPercent(suggestedAllocationInputs.riskTarget)}</span>
@@ -208,7 +208,7 @@ export default function Allocation() {
         <div className="flex flex-wrap gap-2">
           {ALLOCATION_MODELS.map((modelId) => (
             <Button key={`card-${modelId}`} variant="secondary" onClick={() => runModel(modelId)}>
-              Run {modelId} ({mlModelMap[modelId].location}) - {mlModelMap[modelId].name}
+              Run {mlModelMap[modelId].name}
             </Button>
           ))}
         </div>

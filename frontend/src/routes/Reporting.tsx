@@ -48,7 +48,7 @@ export default function Reporting() {
   const handleRunMock = (modelId: MLModelId) => {
     const model = mlModelMap[modelId];
     dispatch({ type: 'RUN_ML_MODEL', payload: { modelId, output: model.mockOutput } });
-    toast(`${modelId} completed (confidence: ${model.confidence.toFixed(2)})`, 'success');
+    toast(`${model.name} completed (confidence: ${model.confidence.toFixed(2)})`, 'success');
     setActiveModelId(null);
   };
 
@@ -64,7 +64,7 @@ export default function Reporting() {
         <div className="flex gap-2">
           {REPORTING_MODELS.map((modelId) => (
             <Button key={modelId} variant="secondary" onClick={() => setActiveModelId(modelId)}>
-              Run {modelId} ({mlModelMap[modelId].location})
+              Run {mlModelMap[modelId].name}
             </Button>
           ))}
         </div>
@@ -73,10 +73,10 @@ export default function Reporting() {
       <Card title="ML Actions">
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={() => setActiveModelId('ML_31')}>
-            Run ML_31 (Reporting → Allocation) - Suggest Allocation Settings
+            Run {mlModelMap.ML_31.name}
           </Button>
           <Button variant="secondary" onClick={() => setActiveModelId('ML_32')}>
-            Run ML_32 (Reporting → Trading) - Suggest Trading Controls
+            Run {mlModelMap.ML_32.name}
           </Button>
         </div>
       </Card>
@@ -98,7 +98,7 @@ export default function Reporting() {
       )}
 
       {reporting.execution && (
-        <Card title="Execution Metrics (ML_23)">
+        <Card title="Execution Metrics (Execution Evaluator)">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="rounded-lg border border-border-custom p-4 bg-surface-3/60">
               <p className="text-xs text-text-muted">Implementation Shortfall</p>
@@ -126,7 +126,7 @@ export default function Reporting() {
       )}
 
       {reporting.allocationExplainability && (
-        <Card title="Allocation Explainability (ML_13)">
+        <Card title="Allocation Explainability (Allocation Explainer)">
           <div className="space-y-3">
             {reporting.allocationExplainability.explanations.map((explanation, idx) => (
               <div key={`${explanation.type}-${idx}`} className="rounded-lg border border-border-custom p-3 bg-surface-3/60">

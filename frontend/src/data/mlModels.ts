@@ -23,7 +23,7 @@ const toRatio = (value: number) => (value > 1 ? +(value / 100).toFixed(4) : valu
 export const mlModels: MLModelDef[] = [
   {
     id: 'ML_12',
-    name: 'Build Trade Plan',
+    name: 'Trade Planner',
     location: 'Allocation → Trading',
     goal: 'Convert target weights + current positions into executable trades + optional slicing plan.',
     owningModule: 'backend/services/trading/ml_12_trade_plan.py',
@@ -90,7 +90,7 @@ export const mlModels: MLModelDef[] = [
   },
   {
     id: 'ML_13',
-    name: 'Explain Allocation',
+    name: 'Allocation Explainer',
     location: 'Allocation → Reporting',
     goal: 'Produce explainability + expected risk/return summary for reporting.',
     owningModule: 'backend/services/reporting/ml_13_allocation_explain.py',
@@ -146,7 +146,7 @@ export const mlModels: MLModelDef[] = [
   },
   {
     id: 'ML_23',
-    name: 'Evaluate Execution',
+    name: 'Execution Evaluator',
     location: 'Trading → Reporting',
     goal: 'Convert orders/fills into execution-quality metrics and anomalies for reporting.',
     owningModule: 'backend/services/reporting/ml_23_execution_eval.py',
@@ -197,7 +197,7 @@ export const mlModels: MLModelDef[] = [
   },
   {
     id: 'ML_31',
-    name: 'Suggest Allocation Settings',
+    name: 'Allocation Advisor',
     location: 'Reporting → Allocation',
     goal: 'Use reporting/risk results to suggest new allocation inputs (risk target, constraints).',
     owningModule: 'backend/services/allocation/ml_31_alloc_feedback.py',
@@ -252,7 +252,7 @@ export const mlModels: MLModelDef[] = [
   },
   {
     id: 'ML_32',
-    name: 'Suggest Trading Controls',
+    name: 'Trading Controller',
     location: 'Reporting → Trading',
     goal: 'Use reporting + execution metrics to suggest trading throttles/controls.',
     owningModule: 'backend/services/trading/ml_32_trading_controls.py',
