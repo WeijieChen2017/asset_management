@@ -13,13 +13,13 @@ type Point = { x: number; y: number };
 type Rect = { x: number; y: number; w: number; h: number };
 
 const FLOW_LAYOUT = {
-  width: 1040,
-  height: 620,
+  width: 1100,
+  height: 520,
   canvasPadding: 28,
-  cardWidth: 276,
-  cardHeight: 104,
-  nodeSpacingX: 420,
-  nodeSpacingY: 360,
+  cardWidth: 330,
+  cardHeight: 78,
+  nodeSpacingX: 500,
+  nodeSpacingY: 392,
   edgeGap: 12,
   arrowStrokeWidth: 3.4,
   arrowHeadSize: 8.4,
@@ -335,16 +335,17 @@ export default function Home() {
 
       <Card title="Platform Flow">
         <div className="grid grid-cols-12">
-          <div className="col-span-12 xl:col-span-10 xl:col-start-2">
+          <div className="col-span-12">
             <div
-              className="rounded-2xl p-5 border"
+              className="rounded-2xl p-[var(--space-4)] border"
               style={{
                 background: flowPalette.canvasBg,
                 borderColor: flowPalette.canvasBorder,
                 boxShadow: flowPalette.canvasInsetShadow,
               }}
             >
-              <svg viewBox={`0 0 ${FLOW_LAYOUT.width} ${FLOW_LAYOUT.height}`} className="w-full h-auto">
+              <div className="platform-flow-canvas">
+                <svg viewBox={`0 0 ${FLOW_LAYOUT.width} ${FLOW_LAYOUT.height}`} className="w-full h-auto">
                 <defs>
                   <filter id="stageSoftShadow" x="-20%" y="-20%" width="140%" height="140%">
                     <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor={flowPalette.dropShadow} floodOpacity={isDark ? '0.35' : '0.12'} />
@@ -488,20 +489,20 @@ export default function Home() {
                       />
                       <text
                         x={stage.center.x}
-                        y={rect.y + 48}
+                        y={rect.y + 32}
                         textAnchor="middle"
                         fill={flowPalette.stageTitle}
-                        fontSize="22"
+                        fontSize="20"
                         fontWeight="600"
                       >
                         {stage.title}
                       </text>
                       <text
                         x={stage.center.x}
-                        y={rect.y + 72}
+                        y={rect.y + 52}
                         textAnchor="middle"
                         fill={flowPalette.stageSubtitle}
-                        fontSize="13.5"
+                        fontSize="12.5"
                         fontWeight="400"
                       >
                         {stage.subtitle}
@@ -509,7 +510,8 @@ export default function Home() {
                     </g>
                   );
                 })}
-              </svg>
+                </svg>
+              </div>
             </div>
           </div>
         </div>

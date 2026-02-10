@@ -16,8 +16,34 @@
   --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
+:root {
+  --ui-scale: 1;
+  --space-2: calc(8px * var(--ui-scale));
+  --space-3: calc(12px * var(--ui-scale));
+  --space-4: calc(16px * var(--ui-scale));
+  --space-6: calc(24px * var(--ui-scale));
+  --content-max-width: 1280px;
+}
+
+@media (min-width: 1440px) {
+  :root { --ui-scale: 1.05; }
+}
+@media (min-width: 1920px) {
+  :root { --ui-scale: 1.12; }
+}
+@media (min-width: 2560px) {
+  :root { --ui-scale: 1.22; }
+}
+@media (min-width: 3200px) {
+  :root { --ui-scale: 1.30; }
+}
+
 * {
   box-sizing: border-box;
+}
+
+html {
+  font-size: calc(16px * var(--ui-scale));
 }
 
 body {
@@ -25,8 +51,38 @@ body {
   background-color: var(--color-surface);
   color: var(--color-text-primary);
   font-family: var(--font-family-sans);
+  font-size: clamp(0.95rem, 0.92rem + 0.16vw, 1.08rem);
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  font-size: clamp(1.35rem, 1.12rem + 0.75vw, 2rem);
+}
+
+h2 {
+  font-size: clamp(1.15rem, 1.02rem + 0.45vw, 1.55rem);
+}
+
+h3 {
+  font-size: clamp(1rem, 0.94rem + 0.25vw, 1.18rem);
+}
+
+.container,
+.app-shell-container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: calc(var(--space-6));
+  padding-right: calc(var(--space-6));
+}
+
+.platform-flow-canvas {
+  width: min(calc(1100px * var(--ui-scale)), 100%);
+  height: auto;
+  margin-inline: auto;
 }
 
 /* Scrollbar styling */
