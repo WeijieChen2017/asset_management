@@ -4,6 +4,7 @@ import { mlModelMap, type MLModelId } from '../data/mlModels';
 import { Card } from '../components/ui/Card';
 import { MLModelDrawer } from '../components/MLModelDrawer';
 import { useToast } from '../components/ui/Toast';
+import { useTheme } from '../store/theme';
 import { PieChart, Repeat, BarChart3, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -100,7 +101,9 @@ function edgeIntersectsRect(edge: { start: Point; end: Point; control?: Point },
 export default function Home() {
   const { state, dispatch } = usePortfolio();
   const { toast } = useToast();
+  const { theme } = useTheme();
   const { allocation, trading, reporting } = state;
+  const isDark = theme === 'dark';
 
   const [hoveredModelId, setHoveredModelId] = useState<MLModelId | null>(null);
   const [selectedModelId, setSelectedModelId] = useState<MLModelId | null>(null);
@@ -182,6 +185,23 @@ export default function Home() {
     ML_23: mlModelMap.ML_23.name,
     ML_31: mlModelMap.ML_31.name,
     ML_32: mlModelMap.ML_32.name,
+  };
+
+  const flowPalette = {
+    canvasBg: isDark ? '#131924' : '#F8FAFC',
+    canvasBorder: isDark ? '#2C3546' : '#E2E8F0',
+    canvasInsetShadow: isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.03)' : 'inset 0 0 0 1px rgba(15, 23, 42, 0.03)',
+    dropShadow: isDark ? '#000000' : '#0F172A',
+    marker: isDark ? '#A7B4C8' : '#64748B',
+    edgeCore: isDark ? '#9AA8BE' : '#64748B',
+    edgeFeedback: isDark ? '#7F8EA6' : '#94A3B8',
+    leader: isDark ? '#42506A' : '#CBD5E1',
+    pillFill: isDark ? '#1A2230' : '#FFFFFF',
+    pillStroke: isDark ? '#42506A' : '#CBD5E1',
+    pillText: isDark ? '#D5DEEC' : '#334155',
+    stageFill: isDark ? '#171F2D' : '#FFFFFF',
+    stageTitle: isDark ? '#EDF3FD' : '#0F172A',
+    stageSubtitle: isDark ? '#A8B4C7' : '#64748B',
   };
 
   const rectByStage = Object.fromEntries(
@@ -319,15 +339,15 @@ export default function Home() {
             <div
               className="rounded-2xl p-5 border"
               style={{
-                background: '#F8FAFC',
-                borderColor: '#E2E8F0',
-                boxShadow: 'inset 0 0 0 1px rgba(15, 23, 42, 0.03)',
+                background: flowPalette.canvasBg,
+                borderColor: flowPalette.canvasBorder,
+                boxShadow: flowPalette.canvasInsetShadow,
               }}
             >
               <svg viewBox={`0 0 ${FLOW_LAYOUT.width} ${FLOW_LAYOUT.height}`} className="w-full h-auto">
                 <defs>
                   <filter id="stageSoftShadow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0f172a" floodOpacity="0.12" />
+                    <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor={flowPalette.dropShadow} floodOpacity={isDark ? '0.35' : '0.12'} />
                   </filter>
                   <marker
                     id="connectorArrow"
@@ -338,14 +358,14 @@ export default function Home() {
                     markerHeight={FLOW_LAYOUT.arrowHeadSize}
                     orient="auto-start-reverse"
                   >
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748B" />
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill={flowPalette.marker} />
                   </marker>
                 </defs>
 
                 {flowEdges.map((edge) => {
                   const active = focusModelId === edge.id;
                   const ready = modelRunState[edge.id];
-                  const strokeColor = active ? STAGE_ACCENTS[edge.source] : edge.kind === 'core' ? '#64748B' : '#94A3B8';
+                  const strokeColor = active ? STAGE_ACCENTS[edge.source] : edge.kind === 'core' ? flowPalette.edgeCore : flowPalette.edgeFeedback;
                   const pillWidth = Math.max(160, edge.roleLabel.length * 6.1 + 24);
                   const pillHeight = 30;
                   const isSplitLaneConnector = edge.id === 'ML_12';
@@ -433,18 +453,18 @@ export default function Home() {
                         strokeDasharray={edge.kind === 'feedback' ? '10 8' : undefined}
                         markerEnd="url(#connectorArrow)"
                       />
-                      <line x1={midpoint.x} y1={midpoint.y} x2={pill.x} y2={pill.y} stroke="#CBD5E1" strokeOpacity={0.8} strokeWidth={1} />
+                      <line x1={midpoint.x} y1={midpoint.y} x2={pill.x} y2={pill.y} stroke={flowPalette.leader} strokeOpacity={0.8} strokeWidth={1} />
                       <rect
                         x={pillX}
                         y={pillY}
                         width={pillWidth}
                         height={pillHeight}
                         rx={pillHeight / 2}
-                        fill="#FFFFFF"
-                        stroke={active ? STAGE_ACCENTS[edge.source] : '#CBD5E1'}
+                        fill={flowPalette.pillFill}
+                        stroke={active ? STAGE_ACCENTS[edge.source] : flowPalette.pillStroke}
                         strokeWidth={1}
                       />
-                      <text x={pillX + pillWidth / 2} y={pill.y + 4} textAnchor="middle" fill="#334155" fontSize="11.6" fontWeight="500">
+                      <text x={pillX + pillWidth / 2} y={pill.y + 4} textAnchor="middle" fill={flowPalette.pillText} fontSize="11.6" fontWeight="500">
                         {edge.roleLabel}
                       </text>
                     </g>
@@ -462,7 +482,7 @@ export default function Home() {
                         width={rect.w}
                         height={rect.h}
                         rx={16}
-                        fill="#FFFFFF"
+                        fill={flowPalette.stageFill}
                         stroke={stage.accent}
                         strokeWidth={focused ? 3 : 2}
                       />
@@ -470,7 +490,7 @@ export default function Home() {
                         x={stage.center.x}
                         y={rect.y + 48}
                         textAnchor="middle"
-                        fill="#0F172A"
+                        fill={flowPalette.stageTitle}
                         fontSize="22"
                         fontWeight="600"
                       >
@@ -480,7 +500,7 @@ export default function Home() {
                         x={stage.center.x}
                         y={rect.y + 72}
                         textAnchor="middle"
-                        fill="#64748B"
+                        fill={flowPalette.stageSubtitle}
                         fontSize="13.5"
                         fontWeight="400"
                       >
